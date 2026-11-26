@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Plantation Mapper",
+    "slug": "plantation-mapper",
+    "version": "1.0.0",
+    "android": {
+      "package": "com.jainilpatel.plantationmapper",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+    }
+  }
+}
