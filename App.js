@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, BackHandler, FlatList, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
+import { ActivityIndicator, BackHandler, FlatList, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddPlantation from './src/AddPlantation';
-import { readRecords, addRecord } from './src/records';
+import { readRecords, addRecord, searchRecords } from './src/records';
 import { Button, Coordinates, s } from './src/ui';
 
 function dateLabel(record) {
@@ -12,6 +12,7 @@ function dateLabel(record) {
 
 function Mapper() {
   const [records, setRecords] = useState([]);
+  const [query, setQuery] = useState('');
   const [loadState, setLoadState] = useState('loading');
   const [screen, setScreen] = useState('home');
   const [selected, setSelected] = useState(null);
@@ -42,6 +43,7 @@ function Mapper() {
     writing.current = true;
     try {
       setRecords(await addRecord(AsyncStorage, records, record));
+      setQuery('');
       setScreen('home');
     } finally {
       writing.current = false;
@@ -63,7 +65,10 @@ function Mapper() {
     <Text selectable style={s.body}>Record ID · {selected.id}</Text>
   </ScrollView>;
 
-  return <FlatList contentContainerStyle={s.content} data={loadState === 'ready' ? records : []}
+  const matches = searchRecords(records, query);
+  const searching = query.trim().length > 0;
+  return <FlatList contentContainerStyle={s.content} data={loadState === 'ready' ? matches : []}
+    keyboardShouldPersistTaps="handled"
     keyExtractor={item => item.id}
     ListHeaderComponent={<View style={{ gap: 14 }}>
       <Text accessibilityRole="header" style={s.title}>Plantation Mapper</Text>
@@ -73,11 +78,21 @@ function Mapper() {
         <Button secondary title="Retry loading" onPress={load} />
       </>}
       {loadState === 'ready' && <>
-        <Text style={s.body}>{records.length} saved {records.length === 1 ? 'record' : 'records'}</Text>
         <Button title="Add plantation" onPress={() => setScreen('add')} />
+        {records.length > 0 && <View style={{ gap: 6 }}>
+          <Text style={s.label}>Search species or catchment</Text>
+          <TextInput accessibilityLabel="Search species or catchment" style={s.input}
+            autoCapitalize="none" autoCorrect={false} value={query} onChangeText={setQuery} />
+          {query.length > 0 && <Button secondary title="Clear" onPress={() => setQuery('')} />}
+        </View>}
+        <Text style={s.body} accessibilityLiveRegion="polite">
+          {searching ? `${matches.length} of ${records.length}` : `${records.length} saved`} {records.length === 1 ? 'record' : 'records'}
+        </Text>
       </>}
     </View>}
-    ListEmptyComponent={loadState === 'ready' && <Text style={s.body}>Your first planting location will appear here.</Text>}
+    ListEmptyComponent={loadState === 'ready' && <Text style={s.body}>
+      {records.length ? 'No matching plantations' : 'Your first planting location will appear here.'}
+    </Text>}
     renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [s.panel, pressed && s.pressed]}
       onPress={() => { setSelected(item); setScreen('detail'); }}>
       <Text style={s.heading}>{item.species}</Text>

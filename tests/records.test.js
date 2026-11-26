@@ -1,9 +1,22 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { canSave, makeRecord, addRecord, readRecords } = require('../src/records');
+const { canSave, makeRecord, addRecord, readRecords, searchRecords } = require('../src/records');
 
 const form = { catchment: ' Koyna ', species: ' Neem ', count: '1', notes: '' };
 const gps = { latitude: 17.40123456, longitude: 73.75123456, accuracy: 4.6 };
+
+test('search keeps same-species records distinct and clearing restores newest-first order', () => {
+  const older = makeRecord(form, gps);
+  const newer = makeRecord({ ...form, catchment: 'Upper Bhima' }, { ...gps, latitude: 18 });
+  const records = Object.freeze([newer, older]);
+  assert.deepEqual(searchRecords(records, '  nEe  '), [newer, older]);
+  const matches = searchRecords(records, '  OYn  ');
+  assert.equal(matches.length, 1);
+  assert.strictEqual(matches[0], older);
+  assert.deepEqual(searchRecords(records, 'missing'), []);
+  assert.deepEqual(searchRecords(records, ''), [newer, older]);
+  assert.deepEqual(searchRecords(records, '   '), [newer, older]);
+});
 
 test('requires names, a positive safe integer and in-range coordinates', () => {
   assert.ok(canSave(form, { latitude: 0, longitude: 0 }));

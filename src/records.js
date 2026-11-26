@@ -44,4 +44,11 @@ async function addRecord(storage, records, record) {
   return updated;
 }
 
-module.exports = { validCount, validCoordinates, canSave, makeRecord, readRecords, addRecord };
+function searchRecords(records, query) {
+  const term = query.trim().toLowerCase();
+  if (!term) return records;
+  return records.filter(record =>
+    record.species.toLowerCase().includes(term) || record.catchment.toLowerCase().includes(term));
+}
+
+module.exports = { validCount, validCoordinates, canSave, makeRecord, readRecords, addRecord, searchRecords };
