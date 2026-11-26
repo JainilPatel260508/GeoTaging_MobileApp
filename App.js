@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, BackHandler, FlatList, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import PlantationMap from './src/PlantationMap';
 import PlantationPhoto from './src/PlantationPhoto';
 import { discardCapture, photoFiles } from './src/photos';
 import AddPlantation from './src/AddPlantation';
-import { readRecords, addRecord, saveWithPhoto, searchRecords } from './src/records';
+import { readRecords, addRecord, saveWithPhoto, searchRecords, validCoordinates } from './src/records';
 import { Button, Coordinates, s } from './src/ui';
 
 function dateLabel(record) {
@@ -17,6 +18,7 @@ function Mapper() {
   const [query, setQuery] = useState('');
   const [loadState, setLoadState] = useState('loading');
   const [screen, setScreen] = useState('home');
+  const [detailOrigin, setDetailOrigin] = useState('home');
   const [selectedId, setSelectedId] = useState(null);
   const selected = records.find(record => record.id === selectedId);
   const writing = useRef(false);
@@ -34,9 +36,9 @@ function Mapper() {
 
   const back = useCallback(() => {
     if (screen === 'home') return false;
-    if (!writing.current) setScreen('home');
+    if (!writing.current) setScreen(screen === 'detail' ? detailOrigin : 'home');
     return true;
-  }, [screen]);
+  }, [screen, detailOrigin]);
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', back);
     return () => subscription.remove();
@@ -65,9 +67,17 @@ function Mapper() {
     }
   }
 
+  function openDetail(id) {
+    setSelectedId(id);
+    setDetailOrigin(screen);
+    setScreen('detail');
+  }
+
+  if (screen === 'map') return <PlantationMap records={records} onBack={back}
+    onAdd={() => setScreen('add')} onOpen={openDetail} />;
   if (screen === 'add') return <AddPlantation onSave={save} onBack={back} />;
   if (screen === 'detail') return <ScrollView contentContainerStyle={s.content}>
-    <Button secondary title="Back to records" onPress={back} />
+    <Button secondary title={detailOrigin === 'map' ? 'Back to map' : 'Back to records'} onPress={back} />
     <Text accessibilityRole="header" style={s.title}>{selected.species}</Text>
     <View style={s.panel}>
       <Text style={s.label}>Hydro project or catchment</Text><Text style={s.body}>{selected.catchment}</Text>
@@ -76,7 +86,7 @@ function Mapper() {
       <Text style={s.label}>Notes</Text><Text style={s.body}>{selected.notes || 'No notes recorded.'}</Text>
     </View>
     <Text style={s.heading}>Planting location</Text>
-    <Coordinates location={selected} />
+    {validCoordinates(selected) ? <Coordinates location={selected} /> : <Text style={s.body}>Coordinates unavailable.</Text>}
     <PlantationPhoto existing uri={selected.photoUri} onCapture={replacePhoto} />
     <Text selectable style={s.body}>Record ID · {selected.id}</Text>
   </ScrollView>;
@@ -95,6 +105,7 @@ function Mapper() {
       </>}
       {loadState === 'ready' && <>
         <Button title="Add plantation" onPress={() => setScreen('add')} />
+        <Button secondary title="View map" onPress={() => setScreen('map')} />
         {records.length > 0 && <View style={{ gap: 6 }}>
           <Text style={s.label}>Search species or catchment</Text>
           <TextInput accessibilityLabel="Search species or catchment" style={s.input}
@@ -110,7 +121,7 @@ function Mapper() {
       {records.length ? 'No matching plantations' : 'Your first planting location will appear here.'}
     </Text>}
     renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [s.panel, pressed && s.pressed]}
-      onPress={() => { setSelectedId(item.id); setScreen('detail'); }}>
+      onPress={() => openDetail(item.id)}>
       <Text style={s.heading}>{item.species}</Text>
       <Text style={s.body}>{item.catchment} · {item.count} {item.count === 1 ? 'sapling' : 'saplings'}</Text>
       <Text style={s.body}>{dateLabel(item)}</Text>
