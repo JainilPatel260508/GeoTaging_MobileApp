@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, Linking, ScrollView, Text, TextInput, View } from 'react-native';
 import * as Location from 'expo-location';
 import { canSave, makeRecord, validCoordinates, validCount } from './records';
+import PlantationPhoto from './PlantationPhoto';
+import { discardCapture } from './photos';
 import { Button, Coordinates, s } from './ui';
 
 function Field({ label, value, onChangeText, multiline, numeric, disabled }) {
@@ -15,6 +17,9 @@ function Field({ label, value, onChangeText, multiline, numeric, disabled }) {
 
 export default function AddPlantation({ onSave, onBack }) {
   const [form, setForm] = useState({ catchment: '', species: '', count: '1', notes: '' });
+  const [photo, setPhoto] = useState(null);
+  const [cameraBusy, setCameraBusy] = useState(false);
+  useEffect(() => () => discardCapture(photo), [photo]);
   const [coords, setCoords] = useState(null);
   const [locating, setLocating] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -76,7 +81,7 @@ export default function AddPlantation({ onSave, onBack }) {
     setSaving(true);
     setError('');
     try {
-      await onSave(makeRecord(form, coords));
+      await onSave(makeRecord(form, coords), photo);
     } catch {
       setError('Could not save on this phone. Check available storage and try saving again.');
       saveLock.current = false;
@@ -97,6 +102,8 @@ export default function AddPlantation({ onSave, onBack }) {
     {coords && <Coordinates location={coords} />}
     {!!error && <Text accessibilityLiveRegion="polite" style={s.error}>{error}</Text>}
     {settings && <Button secondary title="Open app settings" onPress={() => Linking.openSettings().catch(() => setError('Open Android Settings and allow location for this app.'))} />}
-    <Button title={saving ? 'Saving…' : 'Save plantation'} disabled={saving || locating || !canSave(form, coords)} onPress={save} />
+    <PlantationPhoto uri={photo} onCapture={setPhoto} onRemove={() => setPhoto(null)}
+      onBusyChange={setCameraBusy} disabled={saving || locating} />
+    <Button title={saving ? 'Saving…' : 'Save plantation'} disabled={saving || cameraBusy || locating || !canSave(form, coords)} onPress={save} />
   </ScrollView>;
 }

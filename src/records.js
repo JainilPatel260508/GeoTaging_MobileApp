@@ -44,6 +44,22 @@ async function addRecord(storage, records, record) {
   return updated;
 }
 
+async function saveWithPhoto(storage, files, records, record, capture) {
+  const index = records.findIndex(item => item.id === record.id);
+  const photoUri = await files.copy(capture);
+  const updated = records.slice();
+  if (index < 0) updated.unshift({ ...record, photoUri });
+  else updated[index] = { ...records[index], photoUri };
+  try {
+    await storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (error) {
+    files.remove(photoUri);
+    throw error;
+  }
+  if (index >= 0 && records[index].photoUri) files.remove(records[index].photoUri);
+  return updated;
+}
+
 function searchRecords(records, query) {
   const term = query.trim().toLowerCase();
   if (!term) return records;
@@ -51,4 +67,4 @@ function searchRecords(records, query) {
     record.species.toLowerCase().includes(term) || record.catchment.toLowerCase().includes(term));
 }
 
-module.exports = { validCount, validCoordinates, canSave, makeRecord, readRecords, addRecord, searchRecords };
+module.exports = { validCount, validCoordinates, canSave, makeRecord, readRecords, addRecord, saveWithPhoto, searchRecords };

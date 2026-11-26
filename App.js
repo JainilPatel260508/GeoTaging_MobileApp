@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, BackHandler, FlatList, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import PlantationPhoto from './src/PlantationPhoto';
+import { discardCapture, photoFiles } from './src/photos';
 import AddPlantation from './src/AddPlantation';
-import { readRecords, addRecord, searchRecords } from './src/records';
+import { readRecords, addRecord, saveWithPhoto, searchRecords } from './src/records';
 import { Button, Coordinates, s } from './src/ui';
 
 function dateLabel(record) {
@@ -15,7 +17,8 @@ function Mapper() {
   const [query, setQuery] = useState('');
   const [loadState, setLoadState] = useState('loading');
   const [screen, setScreen] = useState('home');
-  const [selected, setSelected] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const selected = records.find(record => record.id === selectedId);
   const writing = useRef(false);
 
   async function load() {
@@ -39,13 +42,25 @@ function Mapper() {
     return () => subscription.remove();
   }, [back]);
 
-  async function save(record) {
+  async function save(record, capture) {
     writing.current = true;
     try {
-      setRecords(await addRecord(AsyncStorage, records, record));
+      const updated = capture ? await saveWithPhoto(AsyncStorage, photoFiles, records, record, capture)
+        : await addRecord(AsyncStorage, records, record);
+      setRecords(updated);
       setQuery('');
       setScreen('home');
     } finally {
+      writing.current = false;
+    }
+  }
+
+  async function replacePhoto(capture) {
+    writing.current = true;
+    try {
+      setRecords(await saveWithPhoto(AsyncStorage, photoFiles, records, selected, capture));
+    } finally {
+      discardCapture(capture);
       writing.current = false;
     }
   }
@@ -62,6 +77,7 @@ function Mapper() {
     </View>
     <Text style={s.heading}>Planting location</Text>
     <Coordinates location={selected} />
+    <PlantationPhoto existing uri={selected.photoUri} onCapture={replacePhoto} />
     <Text selectable style={s.body}>Record ID · {selected.id}</Text>
   </ScrollView>;
 
@@ -94,7 +110,7 @@ function Mapper() {
       {records.length ? 'No matching plantations' : 'Your first planting location will appear here.'}
     </Text>}
     renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [s.panel, pressed && s.pressed]}
-      onPress={() => { setSelected(item); setScreen('detail'); }}>
+      onPress={() => { setSelectedId(item.id); setScreen('detail'); }}>
       <Text style={s.heading}>{item.species}</Text>
       <Text style={s.body}>{item.catchment} · {item.count} {item.count === 1 ? 'sapling' : 'saplings'}</Text>
       <Text style={s.body}>{dateLabel(item)}</Text>

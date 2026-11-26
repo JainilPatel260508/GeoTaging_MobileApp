@@ -3,6 +3,7 @@
     "name": "Plantation Mapper",
     "slug": "plantation-mapper",
     "version": "1.0.0",
+    "plugins": [["expo-image-picker", { "microphonePermission": false }]],
     "android": {
       "package": "com.jainilpatel.plantationmapper",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
