@@ -3,10 +3,26 @@
     "name": "Plantation Mapper",
     "slug": "plantation-mapper",
     "version": "1.0.0",
-    "plugins": [["expo-image-picker", { "microphonePermission": false }]],
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "microphonePermission": false
+        }
+      ]
+    ],
     "android": {
       "package": "com.jainilpatel.plantationmapper",
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
-    }
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9c297726-ba54-40a0-b17f-6e623639916f"
+      }
+    },
+    "owner": "jainilpatel260508"
   }
 }

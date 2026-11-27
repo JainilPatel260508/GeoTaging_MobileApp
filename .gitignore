@@ -5,3 +5,7 @@ dist/
 *.keystore
 .env*
 .DS_Store
+
+release-output/
+credentials.json
+src/leaflet.generated.js
