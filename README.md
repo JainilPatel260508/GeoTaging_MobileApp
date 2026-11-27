@@ -1,57 +1,71 @@
 # Plantation Mapper
 
-ADYPU Mobile Application course project · Problem #179
+ADYPU Mobile Application · Problem #179 · Geo tagging of plantation in the catchment area of a hydro project
 
-A field worker can capture a sapling's planting location in a hydro project's catchment, save the record on the phone and revisit its original coordinates. Search saved records by species or catchment, attach a photo during planting or from a saved record, and open the record from its map marker.
+A field worker records the catchment, species, sapling count, optional notes, GPS fix and optional photo at planting time. Later, they can search by species or catchment, or tap a map marker to revisit the original record. Plantations at identical coordinates share a marker with a choice of records.
 
-## Run on an Android phone
+## Install the course APK
 
-Install Node.js LTS and an Android version of Expo Go compatible with Expo SDK 58. Connect the phone and computer to the same Wi-Fi network. From the repository root, run:
+Download the APK on Android, open it and follow the system installer. If Android requests permission to install from the browser or file manager, allow that source for the installation. Launch **Plantation Mapper** from the app drawer. The submission profile embeds the JavaScript bundle so Metro can be stopped. Expo Go and the standalone app have separate private storage. Capture the viva record in the installed APK.
+
+- [Download Plantation Mapper 1.0.0](https://expo.dev/artifacts/eas/zsBCTeLkpqq1s_eqQjbRuaEXJvZRZ6eayf8LtrgTLRc.apk)
+- [Expo build details](https://expo.dev/accounts/jainilpatel260508/projects/plantation-mapper/builds/c37a0ebe-7800-4d3a-9f60-4aceb5c5cf47)
+- [Release source b400cab](https://github.com/JainilPatel260508/GeoTaging_MobileApp/commit/b400cab8904491857982cd609c3e29c269c9760c)
+
+### Submission artifact verification
+
+The downloaded APK is 72,491,013 bytes. Android build tools verified APK Signature Scheme v2, package `com.jainilpatel.plantationmapper`, version 1.0.0 (code 1) and launch activity `MainActivity`. Its archive contains `assets/index.android.bundle`.
+
+| Fingerprint | Value |
+|---|---|
+| APK SHA-256 | `ac0c6dbca887755dc206ffdc2fb16a5e46034ac76d39d2e23c895b48d41a021a` |
+| Signing certificate SHA-1 | `61:84:3A:D0:B3:CE:EF:6F:A0:FD:48:77:47:CE:97:EF:A3:64:76:70` |
+
+All nine logic tests, Expo dependency checks, Expo Doctor (20/20), and the Android bundle export passed. ADB listed no device or running emulator. The phone acceptance test below remains pending.
+
+## Run and rebuild
+
+From the repository root, install dependencies with Node.js LTS. For development, connect the phone and computer to the same Wi-Fi and scan the QR code in Expo Go for SDK 58.
 
 ```sh
 npm ci
 npx expo start
 ```
 
-Open Expo Go and scan the QR code printed by Expo. Leave the terminal running while using the development app.
-
-GPS capture requests foreground location access when you tap **Capture current location**. Records live in AsyncStorage on this device. Clearing the app's data or uninstalling it can remove them. The app uses no server for capture, save or lookup. Expo Go needs access to the local development server to load the JavaScript on a cold start. For a restart test without internet, keep both devices on the same local Wi-Fi and disconnect that network's internet uplink. Start Metro with `npm start -- --go --offline` if the computer is already offline.
-
-## Physical-device check
-
-1. On a fresh installation, confirm **0 saved records**. Tap **Add plantation**, enter the catchment and species, and check that the count starts at 1. Try 0 or a decimal, then restore 1. Saving should stay disabled until you capture a location.
-2. Outdoors, tap **Capture current location**. Deny permission once, retry and grant precise location while using the app. Also try with Android Location turned off, then switch it back on and retry. Check that your entries survive and a successful fix shows latitude, longitude and accuracy when available.
-3. With the app loaded, disconnect mobile data and Wi-Fi, leaving Location on. Capture again, note the coordinates and tap **Save plantation** twice quickly. Confirm one record appears. Open it and compare both coordinates. Add a second record and check that it appears first.
-4. Walk elsewhere. Restore the local Wi-Fi connection for Expo Go, force-stop Expo Go without clearing its data, and reopen the same project. Confirm both records remain and the first record still shows its original coordinates, timestamp and notes.
-
-## Project checks
+To check the project and create a standalone APK, sign in to an Expo account with build access to the linked project. The submission profile uses Android package `com.jainilpatel.plantationmapper` and the project's remote signing keystore. Reuse that keystore for updates.
 
 ```sh
 npm test
 npx expo install --check
+npx expo-doctor@latest
 npx expo export --platform android
+npx eas-cli@latest login
+npx eas-cli@latest build --platform android --profile submission --wait
 ```
 
-The Node tests exercise input validation, coordinate snapshots, serialization and storage failure handling with a storage substitute. The Android export compiles the JavaScript bundle. Use the physical-device check for native GPS, permissions and persistence across a real restart.
+## Permissions, photos and offline use
 
-## Photos and the plantation map
+- **Foreground location** is requested on **Capture current location**. For a field record, grant precise location, turn on Android Location and capture outdoors. A failed or denied fix can be retried with the same form entries.
+- **Camera** is requested when you take, add or replace a photo. You can cancel, retake or skip. Saving copies the accepted image into the app's documents directory. Replacing a photo updates its URI before removing the previous image.
+- **Persistence.** AsyncStorage holds record IDs, timestamps, field values, original coordinates and photo URIs. Clearing app data or uninstalling can remove this installation's records. The list, search, details and local photos remain usable offline.
+- **Map.** This APK uses bundled Leaflet controls and saved coordinates with online OpenStreetMap base tiles. Maps can open with current-location permission disabled. Tile requests disclose the viewed area to the provider. The marker opens a record by ID, including when other records have the same species. [OpenStreetMap tile policy](https://operations.osmfoundation.org/policies/tiles/)
+- **Optional Google Maps build.** Expo Go uses its included Google Maps integration. To select native Google Maps in a future APK, enable Maps SDK for Android in a billing-enabled Google Cloud project. Restrict the key to that API, the package above and the signing certificate's SHA-1. Set `GOOGLE_MAPS_ANDROID_API_KEY` in the linked EAS project's production environment and rebuild. The OpenStreetMap release needs no Google key. [Expo Android map setup](https://docs.expo.dev/versions/latest/sdk/map-view/#android)
 
-Camera permission is requested when taking a photo. You can cancel, retake or skip it. Saving copies the picture into the app's documents directory and stores its URI alongside the record in AsyncStorage. **Add photo** or **Replace photo** in details keeps the original record ID, timestamp and coordinates. Photos remain local to this installation.
+## 60-second viva
 
-Choose **View map** to see all valid saved locations, including records outside the current search. Tap a marker and choose **Open details**. Plantations at the same coordinates share a marker with a choice of records. Map tiles may need internet. The list, search, details and photos work from local storage.
+**Before the viva:** Install the submission APK. Outdoors, create a record with a recognizable catchment name, capture its GPS accuracy and take a clear photo. Save it, force-stop the app, and reopen it to check the photo and coordinates. Have internet available indoors for base tiles.
 
-## Standalone Android map setup for Day 3
+| Time | Screen action | What to say |
+|---|---|---|
+| 0–10 s | Open Home from the Android launcher. | “Plantation Mapper helps a field worker record and revisit planting sites in a hydro project's catchment. I recorded this sapling outdoors before the demo.” |
+| 10–22 s | Type part of the catchment name and tap the result. | “This search checks both species and catchment on the phone. Here are the sapling count, planting time and field notes.” |
+| 22–36 s | Show the coordinates, accuracy, photo and record ID. | “These coordinates belong to the planting site. Moving indoors hasn't changed them. The photo is stored with this record and survived closing the app.” |
+| 36–52 s | Return to Home, tap **View map**, tap the marker and choose **Open details**. | “The pin uses the saved coordinates. It opens the same record ID, so two plantations with the same species still have distinct records.” |
+| 52–60 s | Show the matching photo again. | “The record and photo are available offline. Internet supplies the base map when I revisit the site.” |
 
-Expo Go includes its own Google Maps configuration. For a sideloaded APK, configure the credential for the actual signing keystore before building.
+## Acceptance test on the submission APK
 
-1. In Google Cloud Console, select a billing-enabled project, enable **Maps SDK for Android**, and create an API key under **APIs & Services → Credentials**.
-2. Set the key's application restriction to **Android apps**. Add package `com.jainilpatel.plantationmapper` and the **SHA-1** of the keystore that signs the APK. For an EAS-managed keystore, use `eas credentials -p android`, select the build profile, and read the signing certificate fingerprint. For a local keystore, run `keytool -list -v -keystore /path/to/signing.keystore -alias YOUR_ALIAS`. Set the API restriction to **Maps SDK for Android**.
-3. Set `GOOGLE_MAPS_ANDROID_API_KEY` in the build environment. For EAS, create the variable in the Expo project's **Environment variables** settings and select that same environment in the APK profile's `environment` field. For a local build, export the variable in your shell. The Expo config passes it to the native maps plugin. Keep the value and the keystore out of Git.
-4. Build with that environment and certificate, install the APK, and confirm tiles and markers load. A change to the embedded key requires a new binary. [Expo Android Google Maps setup](https://docs.expo.dev/versions/latest/sdk/map-view/#android)
-
-## Day 2 phone check
-
-1. From a Day 1 record, note its ID, coordinates and timestamp. Tap **Add photo**, deny camera permission, retry and take a photo. Cancel one replacement and verify the original still displays. Complete a replacement and check the record fields and list position.
-2. At a different location, create a second plantation, capture GPS, enter details and cancel the camera once. Confirm the form survives. Capture, preview, retake and save a distinct photo.
-3. Force-stop and reopen the same project. Open both records and match their photos. Disable location permission, open **View map**, tap each marker and open its details. Return to Home and search for each catchment.
-4. With the project loaded, disconnect internet and check Home search, details and photos again. On a fresh installation, verify the map offers **Add plantation** when empty.
+1. With Metro stopped, capture and save a record outdoors. Note its ID, coordinates and photo. Force-stop the APK from Android settings and relaunch. Reopen the same record and compare.
+2. Search by part of the catchment name. With internet available, open **View map**. Check that roads or terrain are visible, tap the marker and compare the record ID and image.
+3. Turn off Wi-Fi and mobile data, relaunch and repeat the search. Verify the saved details and photo open. Restore connectivity afterward.
+4. In a new form, enter fields, deny location permission or cancel the camera and verify the entries survive. If a photo-less record is available, attach a photo and check its original coordinates, ID, timestamp and list position.
