@@ -2,26 +2,26 @@
 
 ADYPU Mobile Application · Problem #179 · Geo tagging of plantation in the catchment area of a hydro project
 
-A field worker records the catchment, species, sapling count, optional notes, GPS fix and optional photo at planting time. Later, they can search by species or catchment, or tap a map marker to revisit the original record. Plantations at identical coordinates share a marker with a choice of records.
+A field worker records the catchment, species, sapling count, optional notes, GPS fix and optional photo at planting time. Later, they can search by species or catchment, or tap a map marker to revisit the original record. Open **Catchment summary** on Home for offline record and sapling totals across all catchments. Tap a catchment to inspect its records, even while Home search is filtered. Plantations at identical coordinates share a marker with a choice of records.
 
 ## Install the course APK
 
 Download the APK on Android, open it and follow the system installer. If Android requests permission to install from the browser or file manager, allow that source for the installation. Launch **Plantation Mapper** from the app drawer. The submission profile embeds the JavaScript bundle so Metro can be stopped. Expo Go and the standalone app have separate private storage. Capture the viva record in the installed APK.
 
-- [Download Plantation Mapper 1.0.0](https://expo.dev/artifacts/eas/zsBCTeLkpqq1s_eqQjbRuaEXJvZRZ6eayf8LtrgTLRc.apk)
-- [Expo build details](https://expo.dev/accounts/jainilpatel260508/projects/plantation-mapper/builds/c37a0ebe-7800-4d3a-9f60-4aceb5c5cf47)
-- [Release source b400cab](https://github.com/JainilPatel260508/GeoTaging_MobileApp/commit/b400cab8904491857982cd609c3e29c269c9760c)
+- [Download Plantation Mapper 1.0.0](https://expo.dev/artifacts/eas/yDy82w7-MUPf6fxH5nrlXiM6jUw3QKeIuW6s9NFqUS8.apk)
+- [Expo build details](https://expo.dev/accounts/jainilpatel260508/projects/plantation-mapper/builds/dbdd345e-ddfd-42f6-96b0-3be86647cf7a)
+- [Release source 408db26](https://github.com/JainilPatel260508/GeoTaging_MobileApp/commit/408db263d10de2e80ab2e4451a8c7b3313c2bb19)
 
 ### Submission artifact verification
 
-The downloaded APK is 72,491,013 bytes. Android build tools verified APK Signature Scheme v2, package `com.jainilpatel.plantationmapper`, version 1.0.0 (code 1) and launch activity `MainActivity`. Its archive contains `assets/index.android.bundle`.
+The downloaded APK is 72,492,849 bytes. Android build tools verified APK Signature Scheme v2, package `com.jainilpatel.plantationmapper`, version 1.0.0 (code 2) and launch activity `MainActivity`. Its archive contains `assets/index.android.bundle`.
 
 | Fingerprint | Value |
 |---|---|
-| APK SHA-256 | `ac0c6dbca887755dc206ffdc2fb16a5e46034ac76d39d2e23c895b48d41a021a` |
+| APK SHA-256 | `6f2633b8e9172febcfcf5db406fceab54c97642dd73d842a65fb3635345cf4e0` |
 | Signing certificate SHA-1 | `61:84:3A:D0:B3:CE:EF:6F:A0:FD:48:77:47:CE:97:EF:A3:64:76:70` |
 
-All nine logic tests, Expo dependency checks, Expo Doctor (20/20), and the Android bundle export passed. ADB listed no device or running emulator. The phone acceptance test below remains pending.
+All eleven logic tests, Expo dependency checks, Expo Doctor (20/20), and the Android bundle export passed. ADB listed no device or running emulator. The phone acceptance test below remains pending.
 
 ## Run and rebuild
 
