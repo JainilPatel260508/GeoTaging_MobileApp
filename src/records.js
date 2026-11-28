@@ -60,11 +60,30 @@ async function saveWithPhoto(storage, files, records, record, capture) {
   return updated;
 }
 
+function catchmentName(record) {
+  return record.catchment?.trim() || 'Unspecified';
+}
+
+function summarizeCatchments(records) {
+  const groups = new Map();
+  for (const record of records) {
+    const name = catchmentName(record);
+    const key = name.toLowerCase();
+    if (!groups.has(key)) groups.set(key, { key, name, records: [], total: 0 });
+    const group = groups.get(key);
+    // Prefer a saved spelling with capitalization when both spellings occur.
+    if (group.name === key && name !== key) group.name = name;
+    group.records.push(record);
+    group.total += record.count;
+  }
+  return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 function searchRecords(records, query) {
   const term = query.trim().toLowerCase();
   if (!term) return records;
   return records.filter(record =>
-    record.species.toLowerCase().includes(term) || record.catchment.toLowerCase().includes(term));
+    record.species.toLowerCase().includes(term) || catchmentName(record).toLowerCase().includes(term));
 }
 
-module.exports = { validCount, validCoordinates, canSave, makeRecord, readRecords, addRecord, saveWithPhoto, searchRecords };
+module.exports = { validCount, validCoordinates, canSave, makeRecord, readRecords, addRecord, saveWithPhoto, searchRecords, catchmentName, summarizeCatchments };

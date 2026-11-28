@@ -6,7 +6,7 @@ import PlantationMap from './src/PlantationMap';
 import PlantationPhoto from './src/PlantationPhoto';
 import { discardCapture, photoFiles } from './src/photos';
 import AddPlantation from './src/AddPlantation';
-import { readRecords, addRecord, saveWithPhoto, searchRecords, validCoordinates } from './src/records';
+import { readRecords, addRecord, saveWithPhoto, searchRecords, validCoordinates, catchmentName, summarizeCatchments } from './src/records';
 import { Button, Coordinates, s } from './src/ui';
 
 function dateLabel(record) {
@@ -18,6 +18,7 @@ function Mapper() {
   const [query, setQuery] = useState('');
   const [loadState, setLoadState] = useState('loading');
   const [screen, setScreen] = useState('home');
+  const [catchmentKey, setCatchmentKey] = useState(null);
   const [detailOrigin, setDetailOrigin] = useState('home');
   const [selectedId, setSelectedId] = useState(null);
   const selected = records.find(record => record.id === selectedId);
@@ -36,7 +37,10 @@ function Mapper() {
 
   const back = useCallback(() => {
     if (screen === 'home') return false;
-    if (!writing.current) setScreen(screen === 'detail' ? detailOrigin : 'home');
+    if (writing.current) return true;
+    if (screen === 'detail') setScreen(detailOrigin);
+    else if (screen === 'catchment') setScreen('summary');
+    else setScreen('home');
     return true;
   }, [screen, detailOrigin]);
   useEffect(() => {
@@ -73,14 +77,41 @@ function Mapper() {
     setScreen('detail');
   }
 
+  function renderRecord({ item }) {
+    return <Pressable accessibilityRole="button" style={({ pressed }) => [s.panel, pressed && s.pressed]}
+      onPress={() => openDetail(item.id)}>
+      <Text style={s.heading}>{item.species}</Text>
+      <Text style={s.body}>{catchmentName(item)} · {item.count} {item.count === 1 ? 'sapling' : 'saplings'}</Text>
+      <Text style={s.body}>{dateLabel(item)}</Text>
+    </Pressable>;
+  }
+
+  if (screen === 'summary' || screen === 'catchment') {
+    const groups = summarizeCatchments(records);
+    const group = screen === 'catchment' && groups.find(item => item.key === catchmentKey);
+    return <FlatList key={screen} contentContainerStyle={s.content} data={group ? group.records : groups}
+      keyExtractor={item => group ? item.id : item.key}
+      ListHeaderComponent={<View style={{ gap: 14 }}>
+        <Button secondary title={group ? 'Back to summary' : 'Back to Home'} onPress={back} />
+        <Text accessibilityRole="header" style={s.title}>{group ? group.name : 'Catchment summary'}</Text>
+      </View>}
+      ListEmptyComponent={<Text style={s.body}>Save a plantation to see catchment totals here.</Text>}
+      renderItem={group ? renderRecord : ({ item }) => <Pressable accessibilityRole="button"
+        style={({ pressed }) => [s.panel, pressed && s.pressed]}
+        onPress={() => { setCatchmentKey(item.key); setScreen('catchment'); }}>
+        <Text style={s.heading}>{item.name}</Text>
+        <Text style={s.body}>{item.records.length} {item.records.length === 1 ? 'record' : 'records'} · {item.total} {item.total === 1 ? 'sapling' : 'saplings'}</Text>
+      </Pressable>} />;
+  }
+
   if (screen === 'map') return <PlantationMap records={records} onBack={back}
     onAdd={() => setScreen('add')} onOpen={openDetail} />;
   if (screen === 'add') return <AddPlantation onSave={save} onBack={back} />;
   if (screen === 'detail') return <ScrollView contentContainerStyle={s.content}>
-    <Button secondary title={detailOrigin === 'map' ? 'Back to map' : 'Back to records'} onPress={back} />
+    <Button secondary title={detailOrigin === 'map' ? 'Back to map' : detailOrigin === 'catchment' ? 'Back to catchment' : 'Back to records'} onPress={back} />
     <Text accessibilityRole="header" style={s.title}>{selected.species}</Text>
     <View style={s.panel}>
-      <Text style={s.label}>Hydro project or catchment</Text><Text style={s.body}>{selected.catchment}</Text>
+      <Text style={s.label}>Hydro project or catchment</Text><Text style={s.body}>{catchmentName(selected)}</Text>
       <Text style={s.label}>Number of saplings</Text><Text style={s.body}>{selected.count}</Text>
       <Text style={s.label}>Created</Text><Text style={s.body}>{dateLabel(selected)}</Text>
       <Text style={s.label}>Notes</Text><Text style={s.body}>{selected.notes || 'No notes recorded.'}</Text>
@@ -106,6 +137,7 @@ function Mapper() {
       {loadState === 'ready' && <>
         <Button title="Add plantation" onPress={() => setScreen('add')} />
         <Button secondary title="View map" onPress={() => setScreen('map')} />
+        <Button secondary title="Catchment summary" onPress={() => setScreen('summary')} />
         {records.length > 0 && <View style={{ gap: 6 }}>
           <Text style={s.label}>Search species or catchment</Text>
           <TextInput accessibilityLabel="Search species or catchment" style={s.input}
@@ -120,12 +152,7 @@ function Mapper() {
     ListEmptyComponent={loadState === 'ready' && <Text style={s.body}>
       {records.length ? 'No matching plantations' : 'Your first planting location will appear here.'}
     </Text>}
-    renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [s.panel, pressed && s.pressed]}
-      onPress={() => openDetail(item.id)}>
-      <Text style={s.heading}>{item.species}</Text>
-      <Text style={s.body}>{item.catchment} · {item.count} {item.count === 1 ? 'sapling' : 'saplings'}</Text>
-      <Text style={s.body}>{dateLabel(item)}</Text>
-    </Pressable>} />;
+    renderItem={renderRecord} />;
 }
 
 export default function App() {

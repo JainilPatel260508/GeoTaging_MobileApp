@@ -12,6 +12,7 @@
       ]
     ],
     "android": {
+      "versionCode": 2,
       "package": "com.jainilpatel.plantationmapper",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
